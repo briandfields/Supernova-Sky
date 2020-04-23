@@ -11,6 +11,8 @@ from scipy import integrate
 
 import math
 
+import time
+
 from scipy.stats import kde
 
 from sys import exit
@@ -35,24 +37,28 @@ def SNstats(ell,bee):
         
     return
 
+t0 = time.time()
+
 # Variables, numbers and strings
 
 R_sun = 8.5# kpc, distance from galactic center to sun
 
-h_sun = 0.00
-h_sun = 0.02
+h_sun = 0.02 # kpc
+h_sun = 0.00 # kpc
 #kpc, height of sun above galactic plane
 
-R_thin = 2.9
+print ("Sun's Galactocentric coords: (R,z) = (%.2f, %.3f) kpc" % (R_sun, h_sun))
+
+R_thin = 2.9 # kpc
 # kpc, scale radius of Milky Way
 
-h_thin = 0.095
+h_thin = 0.095 # kpc
 # kpc, scale height of Milky Way
 
-R_thick = 2.4
+R_thick = 2.4  # kpc
 #kpc
 
-h_thick = 0.8#kpc
+h_thick = 0.8 #kpc
 
 stddev = 1
 #magnitude difference of standard deviation
@@ -61,9 +67,16 @@ sn_num = int(4e5)
 sn_num = int(9e3)
 sn_num = int(1e4)
 sn_num = int(1e5)
-sn_num = int(1e4)
 sn_num = int(1e5)
-sn_num = int(1e3)
+sn_num = int(2.e3)
+sn_num = int(1e6)
+sn_num = int(2e4)
+sn_num = int(5e3)
+sn_num = int(1e5)
+sn_num = int(5.e3)
+sn_num = int(1.e3)
+sn_num = int(1e6)
+
 
 # number of random supernovae generated
 
@@ -75,15 +88,30 @@ band = "V"
 SN_type = "Ia"
 SN_label = "Type Ia"
 
+
+SN_type = "Ia"
+SN_label = "Type Ia"
+
 SN_type = "CC"
 SN_label = "Core Collapse"
 
+
 #sn type we're looking at
 
+minvis = 0.0
 minvis = 2.0
 # 2: easily noticeable everywhere; 6: noticeable in dark spaces; 7: human vision limit; 26: LSST
 
 
+print ("Running with:")
+print ("N_SN = %i" % sn_num)
+print ("Type:  %s = %s" % (SN_type, SN_label))
+print ("band:  %s" % band)
+print ("m_lim = %.2f mag" % minvis)
+
+
+if ((SN_type != "CC") and (SN_type != "Ia")):
+    print "bad SN type ::%2::" % (SN_type)
 
 
 
@@ -178,7 +206,7 @@ theta = np.zeros_like(o)
 
 z = np.zeros_like(o)
 
-if SN_type == 'CC':
+if SN_type == "CC":
 
     # r = R_thin*o
 
@@ -200,7 +228,7 @@ if SN_type == 'CC':
             z[i] = - z[i]
 
 
-elif SN_type == 'Ia':
+elif SN_type == "Ia":
 
     for i in range(len(o)):
 
@@ -228,9 +256,10 @@ elif SN_type == 'Ia':
                 z[i] = - z[i]
             # exponential height distribution
             
-    else:
-        
-        exit("Invalid SN type, make sure it is either CC or Ia")
+else:
+
+    print ("SN type = ::%s::") % (SN_type)
+    exit("Invalid SN type, make sure it is either CC or Ia")
 
 
 
@@ -446,6 +475,15 @@ print('%1.2f percent of supernovae have an apparent magnitude greater than %d' %
 print "Stats for visible supernovae"
 Nq_tot = SNstats(brightl,brightb)
 
+
+t1 = time.time()
+hours = (t1-t0)/3600
+minutes = (hours - int(hours))*60
+seconds = (minutes-int(minutes))*60
+
+print('Time to run: %d hours %d minutes %.1f seconds' %(int(hours), int(minutes), seconds))
+
+
 print('Plotting supernovae...')
 
 fig0 = plt.figure(figsize=(15.,8.))
@@ -457,7 +495,7 @@ plt.plot(brightl, brightb, 'r.', zorder=2)
 
 plt.title('%d %s Supernovae in the %s Band' %(sn_num, SN_label, band),fontsize=20)
 
-plt.text(-160.,8.,r"$%s_{\rm max} > %.1f$" % (band,minvis),color='blue',fontsize=20)
+plt.text(-170.,13.,r"$%s_{\rm max} > %.1f$" % (band,minvis),color='blue',fontsize=20)
 
 plt.xlabel(r'Galactic Longitude $\ell$',fontsize=20)
 
@@ -483,21 +521,43 @@ k = kde.gaussian_kde([X,Y])
 xi, yi = np.mgrid[X.min():X.max():nbins*1j, Y.min():Y.max():nbins*1j]
 
 zi = k(np.vstack([xi.flatten(), yi.flatten()]))
-ax1.pcolormesh(xi, yi, zi.reshape(xi.shape))
+ax1.pcolormesh(xi, yi, zi.reshape(xi.shape), cmap=plt.cm.jet)
 #ax1.pcolormesh(xi, yi, zi.reshape(xi.shape), shading='gouraud', cmap=plt.cm.BuGn_r)
 
-plt.title('%d %s Supernovae in the %s-Band' %(sn_num, SN_label, band),fontsize=20)
+plt.title('%d %s Supernovae in the %s Band' %(sn_num, SN_label, band),fontsize=20)
 
 ax1.set_xlabel(r'Galactic Longitude $\ell$ [deg]',fontsize=20)
 
 ax1.set_ylabel(r'Galactic Latitude $b$ [deg]',fontsize=20)
 
-plt.text(-160.,8.,r"$%s_{\rm max} > %.1f$" % (band,minvis),color='white',fontsize=20)
+#mag_label = r"$%s_{\rm max} > %.1f$" % (band,minvis),
+plt.text(+170.,13.,r"$%s_{\rm max} > %.1f$" % (band,minvis),color='white',fontsize=20)
+#plt.text(-160.,8.,mag_label,color='white',fontsize=20)
 
-ax1.set_xlim(-180.,180.)
-ax1.set_ylim(-10.,10.)
+ax1.set_xlim(180.,-180.)
+ax1.set_ylim(-15.,15.)
 
-plt.savefig("vis.png")
+
+
+if (SN_type=="Ia"):
+    plt.scatter([327.6-360., 4.5, 120.1], [+14.6, +6.8, +1.4], facecolors='w', edgecolors='y', zorder=10, marker=(5,1), s=200)
+    plt.annotate('SN1006', (327.6-360.,+14.6), xytext=(-37.,14.2), color='w', zorder=10, fontsize=15)
+    plt.annotate('SN1604 (Kepler)',(4.5, 6.8), xytext=(2.5,6.4), color = 'w',zorder=10, fontsize=15)
+    plt.annotate('SN1572 (Tycho)', (120.1, 1.4), xytext=(116.,1.0), color = 'w',zorder=10, fontsize=15)
+elif (SN_type=="CC"):
+    plt.scatter([-175.4, 130.7], [-5.8, +3.1], facecolors='w', marker=(5,1), zorder=10, s=200, edgecolors='y')
+    plt.annotate('SN1054 (Crab)', (-175.4, -5.8), xytext=(-125,-6.0), color='w',zorder=10, fontsize=15)
+    plt.annotate('SN1181',(130.7,3.1), xytext=(127,3.0), color='w', zorder=10, fontsize=15)
+
+magname = "%s%.1f" % (band,minvis)
+lgsnnum = "%.1f" % (np.log10(sn_num))
+zsunlabel = "zsun%.0f" % (h_sun*1.e3)
+figbasename = "SkyMap_" + SN_type + "_" + magname + "_" + lgsnnum + "_" + zsunlabel
+figname_png = figbasename+".png"
+figname_pdf = figbasename+".pdf"
+plt.savefig(figname_png)
+print ("plot written to: %s" % figname_png)
+#plt.savegig(figname_pdf)
 #plt.savefig("vis.pdf")
 
 
@@ -529,3 +589,13 @@ plt.savefig("vis.png")
 # #plt.colorbar(label = 'Probability per Square Degree')
 
 # plt.show()
+
+
+
+t2 = time.time()
+hours = (t2-t0)/3600
+minutes = (hours - int(hours))*60
+seconds = (minutes-int(minutes))*60
+
+print('Time to run: %d hours %d minutes %.1f seconds' %(int(hours), int(minutes), seconds))
+        
