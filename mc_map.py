@@ -1,6 +1,7 @@
 import numpy as np
 
 import matplotlib.pyplot as plt
+import matplotlib.colorbar as colorbar
 
 #from mpl_toolkits.mplot3d
 #import Axes3D
@@ -43,8 +44,8 @@ t0 = time.time()
 
 R_sun = 8.5# kpc, distance from galactic center to sun
 
-h_sun = 0.02 # kpc
 h_sun = 0.00 # kpc
+h_sun = 0.02 # kpc
 #kpc, height of sun above galactic plane
 
 print ("Sun's Galactocentric coords: (R,z) = (%.2f, %.3f) kpc" % (R_sun, h_sun))
@@ -74,8 +75,8 @@ sn_num = int(2e4)
 sn_num = int(5e3)
 sn_num = int(1e5)
 sn_num = int(5.e3)
-sn_num = int(1.e3)
 sn_num = int(1e6)
+sn_num = int(1.e3)
 
 
 # number of random supernovae generated
@@ -89,17 +90,18 @@ SN_type = "Ia"
 SN_label = "Type Ia"
 
 
-SN_type = "Ia"
-SN_label = "Type Ia"
 
 SN_type = "CC"
 SN_label = "Core Collapse"
 
+SN_type = "Ia"
+SN_label = "Type Ia"
+
 
 #sn type we're looking at
 
-minvis = 0.0
 minvis = 2.0
+minvis = 0.0
 # 2: easily noticeable everywhere; 6: noticeable in dark spaces; 7: human vision limit; 26: LSST
 
 
@@ -521,8 +523,15 @@ k = kde.gaussian_kde([X,Y])
 xi, yi = np.mgrid[X.min():X.max():nbins*1j, Y.min():Y.max():nbins*1j]
 
 zi = k(np.vstack([xi.flatten(), yi.flatten()]))
-ax1.pcolormesh(xi, yi, zi.reshape(xi.shape), cmap=plt.cm.jet)
+zi_normed = zi/np.max(zi)
+cs = ax1.pcolormesh(xi, yi, zi_normed.reshape(xi.shape), cmap=plt.cm.jet)
 #ax1.pcolormesh(xi, yi, zi.reshape(xi.shape), shading='gouraud', cmap=plt.cm.BuGn_r)
+
+cbar = fig.colorbar(cs, format='%.2f')
+cbar.set_label(r'Probability $P/P_{\rm max}$',fontsize=20, weight='bold')
+#plt.colorbar(format='%.2f',label=r'$P$')
+
+
 
 plt.title('%d %s Supernovae in the %s Band' %(sn_num, SN_label, band),fontsize=20)
 
@@ -548,6 +557,9 @@ elif (SN_type=="CC"):
     plt.scatter([-175.4, 130.7], [-5.8, +3.1], facecolors='w', marker=(5,1), zorder=10, s=200, edgecolors='y')
     plt.annotate('SN1054 (Crab)', (-175.4, -5.8), xytext=(-125,-6.0), color='w',zorder=10, fontsize=15)
     plt.annotate('SN1181',(130.7,3.1), xytext=(127,3.0), color='w', zorder=10, fontsize=15)
+
+
+
 
 magname = "%s%.1f" % (band,minvis)
 lgsnnum = "%.1f" % (np.log10(sn_num))
@@ -586,7 +598,6 @@ print ("plot written to: %s" % figname_png)
 
 # plt.ylim(-10,10)
 
-# #plt.colorbar(label = 'Probability per Square Degree')
 
 # plt.show()
 
