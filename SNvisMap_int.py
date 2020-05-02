@@ -86,13 +86,14 @@ SN_dist = 'Adams'
 
 
 
+SN_type = 'Ia'
+SN_dist = 'Ia'
+SN_label = "Type Ia"
+
 SN_type = 'CC'
 SN_dist = 'CC'
 SN_label = "Core-Collapse"
 
-SN_type = 'Ia'
-SN_dist = 'Ia'
-SN_label = "Type Ia"
 
 
 #SN_type = SN_dist
@@ -101,7 +102,11 @@ SN_label = "Type Ia"
 ### passband
 band = "V"
 
+m_lim = 0.
+m_lim = 80.
 m_lim = 2.
+
+N_obscure = 0
 
 if (SN_type == 'CC'):
     M_SN = -16.
@@ -117,12 +122,22 @@ zoom = False
 
 ## resolution: longitude and latitude points in one quadrant
 
-N_l1q = 2*90
+#N_l = 2*N_l1q
+#N_b = 2*N_b1q
 
-N_b1q = 2*10
+#N_l = 180
+#N_b = 10
+N_l = 180+1
+N_b = 15+1
+N_l = 2*360+1
+N_b = 2*30+1
+N_l = 2*45+1
+N_b = 2*30+1
 
-N_l1q = 90
-N_b1q = 10
+#N_l1q = 2*90
+#N_b1q = 2*10
+#N_l1q = 90
+#N_b1q = 10
 
 
 def dP_drdldb(r,bee,ell):
@@ -276,7 +291,7 @@ def Psn_int(l_min,l_max,b_min,b_max):
     P_1q, err = integrate.tplquad(dP_drdldb,l_min,l_max,b_inf,b_sup,r_inf,r_sup)
     P_sn = 4. * P_1q
 
-    print "P and err", P_sn, err
+    print ("P and err", P_sn, err)
 
     return P_sn
 
@@ -350,6 +365,7 @@ def dm_dr(r0,l0,b0):
 def FindDist(m_lim,M_SN,ll,bb):
     # find distance to supernova
     global R_sun
+    global N_obscure
 
     r_max = 6.*R_sun
     m_max = m_app(r_max,ll,bb,M_SN)
@@ -362,6 +378,8 @@ def FindDist(m_lim,M_SN,ll,bb):
     count = 0
 
     if (m_old > m_lim):
+
+        N_obscure = N_obscure+1
 
         while (np.abs(m_old-m_lim) > eps):
             # use Newton's method
@@ -381,20 +399,19 @@ def FindDist(m_lim,M_SN,ll,bb):
 # geometry parameters
 
 R_sun = 8.7  # kpc
-z_sun = 0.020 # kpc
 z_sun = 0.000 # kpc
+z_sun = 0.020 # kpc
 
 R_cc = 2.9  # kpc
-R_ia = 2.4
- # kpc
-h_cc = 0.05
-# kpc
+R_ia = 2.4 # kpc
+h_cc = 0.05 # kpc
 h_ia = 0.8 # kpc
 
 # TRILEGAL
 h_dust = 0.110 # kpc
 
 h_thin = 0.095 # kpc
+R_thin = 2.9 # kpc
 R_thin = 2.9 # kpc
 
 h_thick = 0.800 # kpc
@@ -446,19 +463,9 @@ else:
 
 
 
-N_l = 2*N_l1q
-
-N_b = 2*N_b1q
-
-#N_l = 180
-#N_b = 10
-N_l = 180+1
-N_b = 15+1
-N_l = 2*360+1
-N_b = 2*30+1
 
 
-print "here goes P_SN"
+print ("here goes P_SN")
 
 #l_up = np.pi
 #b_up = np.pi/2.
@@ -521,8 +528,10 @@ for i in range(0,N_l):
     b_lim[i] = 10. * (1 - l_deg / 90.)
     l_lim[i] = l_deg
 
-    if (i%20 == 0):
-        print "%i" % (i)
+    if (i%10 == 0):
+        print ("%i " % i, end='', flush=True)
+    if (i == N_l-1):
+        print ("")
 
     #for j in range(0,N_b1q):
     for j in range(0,N_b):
@@ -580,24 +589,37 @@ for i in range(0,N_l):
 
 
 
+dl_deg = lat[0,1] - lat[0,0]
+db_deb = long[0,0] - long[1,0]
+dOmega = dl_deg * db_deb * (np.pi/180.)**2
+print ("dOmega, P_sum, P_int_sum, P_ext_sum: %.3e %.3e %.3e %.3e" % (dOmega, P_sum, P_int_sum, P_ext_sum))
+P_sum = P_sum * dOmega
+P_int_sum = P_int_sum * dOmega
+P_ext_sum = P_ext_sum * dOmega
+
 
 print( "SN type ", SN_type)
 
-P_tot = 4.*P_sum*(b_max_deg/(N_b1q-1.))*(l_max_deg/(N_l1q-1.))*(np.pi/180.)**2
-
 
 P_max = np.max(dP_dOmega)
+P_max_deg2 = P_max * (np.pi/180.)**2
+print ("max probability density:  %.2e deg^-2" % P_max_deg2)
 
 
-print ("estimated P_tot = ",P_tot)
-P_int = P_int_sum / P_sum
-P_ext = P_ext_sum / P_sum
-print ("interior propabilty:  P_int = %.4f",P_int)
-print ("exterior propabilty:  P_ext = %.4f",P_ext)
+#P_tot = 4.*P_sum*(b_max_deg/(N_b1q-1.))*(l_max_deg/(N_l1q-1.))*(np.pi/180.)**2
+#print ("estimated P_tot = ",P_tot)
+
+f_int = P_int_sum/P_sum
+f_ext = P_ext_sum/P_sum 
+print ("interior propabilty:  P_int = %.4f, f_int = %.4f" % (P_int_sum,f_int))
+print ("exterior propabilty:  P_ext = %.4f, f_ext = %.4f" % (P_ext_sum,f_ext))
+print ("total propabilty:  P_tot = %.4f" % (P_sum))
+
+print ("%i of %i obscured sightlines" % (N_obscure,N_l*N_b))
 
 
 t1 = time.time()
-print "time to calculate:  %.2f sec" % (t1-t0)
+print ("time to calculate:  %.2f sec" % (t1-t0))
 
 ####
 
@@ -624,7 +646,9 @@ ax1.set_xlim(180.,-180.)
 ax1.set_ylim(-15.,15.)
 
 # cs = ax1.contour(long,lat,dP_dOmega/P_max,levs)
-cs = ax1.contourf(long,lat,dP_dOmega/P_max,levs)
+cs = ax1.contourf(long,lat,dP_dOmega/P_max,levs, cmap=plt.cm.jet)
+
+print ("contour plotted")
 
 #ax1 = plt.subplot(111,projection="aitoff")
 
@@ -639,7 +663,7 @@ cs = ax1.contourf(long,lat,dP_dOmega/P_max,levs)
 
 ax1.set_xlabel(r"Galactic longitude ${\ell}$ [deg]",fontsize=20,weight="bold")
 
-ax1.set_ylabel(r"Galactic latitude $b$ [deg]",fontsize=20,weight="bold")
+ax1.set_ylabel(r"Galactic latitude ${b}$ [deg]",fontsize=20,weight="bold")
 
 #ax1.text(-0.9*l_max_deg,+2.*b_max_deg/3.,labtext,fontsize=20,weight='bold', color = 'white')
 
@@ -672,7 +696,7 @@ if (draw_LSST):
 
 # ax1.set_aspect('equal')
 
-cbar = fig.colorbar(cs, format='%.2f')
+cbar = fig.colorbar(cs, format='%.2f', pad=0.01)
 cbar.set_label(r'Probability $P/P_{\rm max}$', fontsize = 20, weight = 'bold')
 
 plt.tick_params(axis='both', which='major', labelsize=20)
@@ -694,9 +718,9 @@ else:
 #plt.show()
 
 fig.savefig(figbasename+".png")
-fig.savefig(figbasename+".eps")
-fig.savefig(figbasename+".pdf")
+#fig.savefig(figbasename+".eps")
+#fig.savefig(figbasename+".pdf")
 
 t2 = time.time()
 
-print "total time:  %.2f sec" % (t2-t0)
+print ("total time:  %.2f sec" % (t2-t0))
