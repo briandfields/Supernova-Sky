@@ -50,6 +50,11 @@ import matplotlib.colorbar as colorbar
 
 import scipy.integrate as integrate
 
+import matplotlib.ticker as ticker
+
+from matplotlib.colors import LogNorm
+from matplotlib.ticker import LogFormatter
+
 from math import gamma
 
 import time
@@ -95,7 +100,6 @@ SN_dist = 'CC'
 SN_label = "Core-Collapse"
 
 
-
 #SN_type = SN_dist
 
 
@@ -103,7 +107,7 @@ SN_label = "Core-Collapse"
 band = "V"
 
 m_lim = 0.
-m_lim = 80.
+m_lim = 65.
 m_lim = 2.
 
 N_obscure = 0
@@ -131,6 +135,10 @@ N_l = 180+1
 N_b = 15+1
 N_l = 2*360+1
 N_b = 2*30+1
+N_l = 4*45+1
+N_b = 4*30+1
+N_l = 1*45+1
+N_b = 1*30+1
 N_l = 2*45+1
 N_b = 2*30+1
 
@@ -602,6 +610,26 @@ print( "SN type ", SN_type)
 
 
 P_max = np.max(dP_dOmega)
+maxlocs = np.where(dP_dOmega==P_max)
+maxlats = lat[(dP_dOmega==P_max)]
+maxlongs = long[(dP_dOmega==P_max)]
+maxPs = dP_dOmega[(dP_dOmega==P_max)]
+print ("there are %i maxima:" % np.size(maxlats))
+print ("lat \tlong \tdP/dOmega_max")
+for j in range(np.size(maxlats)):
+    print ("%.2f \t %.2f \t %.2e" % (maxlats[j],maxlongs[j],maxPs[j]))
+
+
+P_min = np.min(dP_dOmega)
+minlocs = np.where(dP_dOmega==P_min)
+minlats = lat[(dP_dOmega==P_min)]
+minlongs = long[(dP_dOmega==P_min)]
+minPs = dP_dOmega[(dP_dOmega==P_min)]
+print ("there are %i minima:" % np.size(minlats))
+print ("lat \tlong \tdP/dOmega_min")
+for j in range(np.size(minlats)):
+    print ("%.2f \t %.2f \t %.2e" % (minlats[j],minlongs[j],minPs[j]))
+
 P_max_deg2 = P_max * (np.pi/180.)**2
 print ("max probability density:  %.2e deg^-2" % P_max_deg2)
 
@@ -623,14 +651,6 @@ print ("time to calculate:  %.2f sec" % (t1-t0))
 
 ####
 
-levs = [0.001,0.003,0.01,0.03,0.1,0.3]
-
-levs = [0.0625,0.125,0.25,0.5,0.95]
-
-levs = [0.01,0.03,0.1,0.3,0.99]
-
-#levs = np.linspace(0.00, 0.99, 301)
-levs = np.linspace(0.00, 1.0, 301)
 
 fig = plt.figure(figsize=(15.,8))
 
@@ -646,7 +666,36 @@ ax1.set_xlim(180.,-180.)
 ax1.set_ylim(-15.,15.)
 
 # cs = ax1.contour(long,lat,dP_dOmega/P_max,levs)
-cs = ax1.contourf(long,lat,dP_dOmega/P_max,levs, cmap=plt.cm.jet)
+#cs = ax1.contourf(long,lat,dP_dOmega/P_max,levs, cmap=plt.cm.jet)
+#cs = ax1.contourf(long,lat,dP_dOmega,levs, cmap=plt.cm.jet, locator=ticker.LogLocator())
+
+ScaleType = 2 # [P/P_max]
+ScaleType = 0 # [sr^-1] linear
+ScaleType = 1 # [sr^-1] log
+
+if (ScaleType == 0):
+    ## scale units [sr^=1]
+    levs =  P_max * np.linspace(0.00, 1.00, 301)
+    cs = ax1.contourf(long,lat,dP_dOmega, levs, cmap=plt.cm.jet)
+    ScaleLabel = r'Probability $dP/d\Omega \ [\rm sr^{-1}]$'
+elif (ScaleType == 1):
+    #levs = P_max*np.logspace(-5.2, 0.0, 301)
+    #cs = ax1.contourf(long,lat,dP_dOmega,levs, cmap=plt.cm.jet, norm=LogNorm())
+    #ScaleLabel = r'Probability $dP/d\Omega \ [\rm sr^{-1}]$'
+    levs = (np.pi/180.)**2 * P_max*np.logspace(-5.2, 0.0, 301)
+    cs = ax1.contourf(long,lat,(np.pi/180.)**2*dP_dOmega,levs, cmap=plt.cm.jet, norm=LogNorm())
+    ScaleLabel = r'Probability $dP/d\Omega \ [\rm deg^{-2}]$'
+elif (ScaleType == 2):    
+    levs = [0.001,0.003,0.01,0.03,0.1,0.3]
+    levs = [0.0625,0.125,0.25,0.5,0.95]
+    levs = [0.01,0.03,0.1,0.3,0.99]
+    #levs = np.linspace(0.00, 0.99, 301)
+    levs = np.linspace(0.00, 1.0, 301)
+    cs = ax1.contourf(long,lat,dP_dOmega/P_max,levs, cmap=plt.cm.jet)
+    ScaleLabel = r'Probability $P/P_{\rm max}$'
+else:
+    print ("Bad ScaleType")
+    
 
 print ("contour plotted")
 
@@ -696,8 +745,21 @@ if (draw_LSST):
 
 # ax1.set_aspect('equal')
 
-cbar = fig.colorbar(cs, format='%.2f', pad=0.01)
-cbar.set_label(r'Probability $P/P_{\rm max}$', fontsize = 20, weight = 'bold')
+if (ScaleType == 1):
+    formatter = LogFormatter(10, labelOnlyBase=False)
+    #cbar = fig.colorbar(cs, pad=0.01, ticks=[1.e-5, 1.e-4, 1.e-3, 1.e-2], format=formatter)
+    cbar = fig.colorbar(cs, pad=0.01, ticks=[1.E-7, 1.E-6, 1.e-5, 1.e-4, 1.e-3, 1.e-2])
+    cbar.ax.tick_params(labelsize=16)
+    #cbar = fig.colorbar(cs, pad=0.01)
+else:
+    cbar = fig.colorbar(cs, format='%.2f', pad=0.01)
+    
+#cbar.set_label(r'Probability $P/P_{\rm max}$', fontsize = 20, weight = 'bold')
+cbar.set_label(ScaleLabel, fontsize = 20, weight = 'bold')
+
+#    cbar.set_ticks(cbticks)
+#    cbar.set_ticklabels(cbticks)
+
 
 plt.tick_params(axis='both', which='major', labelsize=20)
 
@@ -708,7 +770,8 @@ magname = "%s%.1f" % (band,m_lim)
 zsunlabel = "zsun%.0f" % (z_sun*1.e3)
 thindisklabel = "Rthin%.1f_hthin%.0f" % (R_thin,h_thin*1.e3)
 thickdisklabel = "Rthick%.1f_hthick%.0f" % (R_thick,h_thick*1.e3)
-figbasename = basename + SN_type + "_" + magname + "_" + zsunlabel + "_" + thindisklabel + "_" + thickdisklabel
+reslabel = "res%ix%i" % (N_l,N_b)
+figbasename = basename + SN_type + "_" + magname + "_" + zsunlabel + "_" + thindisklabel + "_" + thickdisklabel + "_" + reslabel
 
 if zoom:
     plotname = figbasename + "_zoom"
@@ -717,7 +780,9 @@ else:
 
 #plt.show()
 
-fig.savefig(figbasename+".png")
+figname_png = figbasename+".png"
+fig.savefig(figname_png)
+print ("plot written to: %s" % figname_png)
 #fig.savefig(figbasename+".eps")
 #fig.savefig(figbasename+".pdf")
 
