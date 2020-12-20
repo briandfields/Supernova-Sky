@@ -7,6 +7,9 @@ Calculation via integration along an array of sightlines.
 
 The integration depth (radius upper limit) for each sightline is found via a root-finding approach, using Newton's method.
 
+## SNProbMap.py
+Calculates intrinsice SN probability density on the sky, without regard for flux limit.  Uses integration method for an array of sightlines.
+
 ## mc_map.py
 Monte Carlo calculation.  Based on Tanner's Monte Carlo code for Milky Way supernova distributions.  
 
