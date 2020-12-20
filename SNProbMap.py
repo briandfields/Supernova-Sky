@@ -29,7 +29,7 @@
 
 ##   SN_dist:  supernova rate density distribution
 
-##   zoom:  show smaller field
+##   zoom:  show smaller longitude field
 
 ##   N_l1q, N_b1q:  number of latitude (l) and longitude (b) points;
 ##                  this sets the resolution of the map and the runtime
@@ -74,28 +74,16 @@ print ("Sky map of MW SN probability")
 ## model parameters
 
 ## supernova density distribution model
-SN_dist = 'spherical'
-
-SN_dist = 'thindisk'
-
-SN_dist = 'Adams'
-
-
-
-# SN_dist = 'Green'
-
-
 
 ##
 ## supernova type
 
-
 PlotType_Ia = 'Ia_fiducial'
 PlotType_CC = 'CC_fiducial'
-PlotType_CCbigR = 'CC_bigR'
-PlotType_IabigR = 'Ia_bigR'
 PlotType_CC26Al = 'CC26Al'
 PlotType_Ia26Al = 'Ia26Al'
+PlotType_CCbigR = 'CC_bigR'
+PlotType_IabigR = 'Ia_bigR'
 
 PlotType = PlotType_CCbigR
 PlotType = PlotType_IabigR
@@ -103,8 +91,6 @@ PlotType = PlotType_Ia26Al
 PlotType = PlotType_CC
 PlotType = PlotType_Ia
 PlotType = PlotType_CC26Al
-
-
 
 #SN_dist = 'spherical'
 #SN_dist = 'thindisk'
@@ -122,14 +108,6 @@ elif (PlotType == PlotType_Ia):
     SN_type = 'Ia'
     SN_dist = 'Ia'
     SN_label = "Type Ia"
-elif (PlotType == PlotType_CCbigR):
-    SN_type = 'CC'
-    SN_dist = 'CCbigR'
-    SN_label = "Core-Collapse"
-elif (PlotType == PlotType_IabigR):
-    SN_type = 'Ia'
-    SN_dist = 'IabigR'
-    SN_label = "Type Ia"
 elif (PlotType == PlotType_CC26Al):
     SN_type = 'CC'
     SN_dist = '26Al'
@@ -137,42 +115,21 @@ elif (PlotType == PlotType_CC26Al):
 elif (PlotType == PlotType_Ia26Al):
     SN_type = 'Ia'
     SN_dist = '26Al'
-    SN_label = "Type Ia"
+    SN_label = "Ia"    
 else:
     print ("Bad plot type: %s" % (PlotType))
 
 
-### passband
-band = "V"
-
-m_lim = 0.
-m_lim = 65.
-m_lim = 2.
-
-N_obscure = 0
-
-if (SN_type == 'CC'):
-    M_SN = -16.  # old number
-    M_SN = -15.  # rough average of CC subtypes, 90 day sustained luminosity
-elif (SN_type == 'Ia'):
-    M_SN = -17.8
-    M_SN = -14.7  # 90 day sustained luminosity
-elif (SN_type == 'M15'):
-    # 15 M_sun at log(age) = 6.9
-    # Geneva isochrones
-    # from https://obswww.unige.ch/Research/evol/tables_PMS/isochrones/Isochr_Z0.0140_Vini0.00_t06.900.dat
-    M_SN = -6.39
-    V_K = -0.7979
-
 
 ## plot region is zoomed in longitidue
 
-#zoom = True
+#ZoomLong = True
 
-zoom = False
+ZoomLong = False
 
-full_lat = True
 full_lat = False
+full_lat = True
+
 
 ## resolution: longitude and latitude points in one quadrant
 
@@ -180,14 +137,15 @@ N_l = 180+1
 N_b = 15+1
 N_l = 2*360+1
 N_b = 2*30+1
-N_l = 4*45+1
-N_b = 4*90+1
-N_l = 2*45+1
 N_b = 2*30+1
+N_l = 2*45+1
+N_l = 2*45+1
+N_b = 2*90+1
 N_l = 1*45+1
 N_b = 1*30+1
 N_l = 4*45+1
-N_b = 4*30+1
+N_b = 4*90+1
+
 
 
 def dP_drdldb(r,bee,ell):
@@ -365,36 +323,6 @@ def q_SN(R_gc,z_gc):
         q = (1./(4.*np.pi * R_1**2 * h_1)) * np.exp( -R_gc/R_1 ) * np.exp( -np.abs(z_gc)/h_1)
 
 
-    elif (SN_dist == 'CCbigR'):
-
-        h_1 = h_thin
-        R_1 = 9.
-
-        q = (1./(4.*np.pi * R_1**2 * h_1)) * np.exp( -R_gc/R_1 ) * np.exp( -np.abs(z_gc)/h_1)
-
-
-    elif (SN_dist == 'IabigR'):
-
-        h_1 = h_thin
-        R_1 = 9.
-        p_1 = 0.5
-
-        h_2 = h_thick
-        R_2 = 9.
-        p_2 = 1. - p_1
-
-        #Q_int = 8.*np.pi * (0.5 * h_1 * R_1**2 + 0.5 * h_2 * R_2**2)
-        #norm = 1/Q_int
-
-        norm_1 = 1./(4.*np.pi * h_1 * R_1**2) 
-        q_1 = norm_1 * np.exp( -R_gc/R_1 ) * np.exp( -np.abs(z_gc)/h_1)
-
-        norm_2 = 1./(4.*np.pi * h_2 * R_2**2) 
-        q_2 = norm_2 * np.exp( -R_gc/R_2 ) * np.exp( -np.abs(z_gc)/h_2)
-
-        q = p_1*q_1 + p_2*q_2
-
-
     elif (SN_dist == '26Al'):
 
         h_1 = h_26Al
@@ -552,8 +480,7 @@ def FindDist(m_lim,M_SN,ll,bb):
 # geometry parameters
 
 R_sun = 8.7  # kpc
-
-z_sun = 0.300 # kpc
+z_sun = 0.000 # kpc
 z_sun = 0.020 # kpc
 
 R_cc = 2.9  # kpc
@@ -585,7 +512,7 @@ h_60Fe = 0.3 # kpc   error:   +2.0 -0.2
 ########################################
 
 
-if (zoom):
+if (ZoomLong):
 
     l_max_deg = 90.
 
@@ -635,14 +562,12 @@ else:
 
 
 ##### calcuation begins
-basename = "SNVisProb_"
-appmagname = "%s%.1f" % (band,m_lim)
-absmagname = "M%.1f" % (M_SN)
+basename = "SNProb_"
 zsunlabel = "zsun%.0f" % (z_sun*1.e3)
 thindisklabel = "Rthin%.1f_hthin%.0f" % (R_thin,h_thin*1.e3)
 thickdisklabel = "Rthick%.1f_hthick%.0f" % (R_thick,h_thick*1.e3)
 reslabel = "res%ix%i" % (N_l,N_b)
-figbasename = basename + SN_type + "_" + SN_dist + "_" + appmagname + "_" + absmagname + "_" + zsunlabel + "_" + thindisklabel + "_" + thickdisklabel + "_" + reslabel
+figbasename = basename + SN_type + "_" + SN_dist + "_" + zsunlabel + "_" + thindisklabel + "_" + thickdisklabel + "_" + reslabel
 
 
 dataname_summary = figbasename + ".dat"
@@ -651,7 +576,6 @@ DataFile = open(dataname_summary,"w")
 dataname_points = figbasename + "_prob.dat"
 DataFile_points = open(dataname_points,"w")
 
-print ("running for %s" % (figbasename))
 
 print ("here goes P_SN")
 
@@ -701,14 +625,6 @@ P_sum = 0.
 P_int_sum = 0.
 P_ext_sum = 0.
 
-# (0.1,73) (0.14,56)
-# (0.11,0.695)
-dPdO_26Al_68 = 0.115
-dPdO_26Al_95 = 0.033
-dPdO_lim = dPdO_26Al_95
-
-P_enc = 0.
-
 #b_lim = np.zeros(N_l1q)
 #l_lim = np.zeros(N_l1q)
 b_lim = np.zeros(N_l)
@@ -719,9 +635,6 @@ l_lim = np.zeros(N_l)
 for i in range(0,N_l):
 
     l_deg = l_max_deg * (1. - 2.*np.float(i)/np.float(N_l-1))
-    #l_deg = l_max_deg * (2.*np.float(i)/np.float(N_l-1) - 1.)
-    #l_deg = l_max_deg * np.float(i)/np.float(N_l1q-1)
-    #l_deg = l_max_deg * i/(N_l1q-1)
 
     l_rad = l_deg*np.pi/180.
 
@@ -733,25 +646,18 @@ for i in range(0,N_l):
     if (i == N_l-1):
         print ("")
 
-    #for j in range(0,N_b1q):
     for j in range(0,N_b):
 
         b_deg = b_max_deg * (2.*np.float(j)/np.float(N_b-1)-1.)
-        #b_deg = b_max_deg * float(j)/np.float(N_b1q-1)
-        #b_deg = b_max_deg * j/(N_b1q-1)
 
         b_rad = b_deg*np.pi/180.
 
-        r_lim = FindDist(m_lim,M_SN,l_rad,b_rad)
+        r_lim = 6.*R_sun
 
         dPdOmega, err = integrate.quad(dPsn_drdOmega,0.,r_lim)
 
 
         P_sum = P_sum + dPdOmega * np.cos(b_rad)
-
-        if (dPdOmega > dPdO_lim):
-            P_enc = P_enc + dPdOmega * np.cos(b_rad)
-        
         if (b_deg < 10.* (1 - l_deg/ 90.)):
             P_int_sum += dPdOmega * np.cos(b_rad)
         else:
@@ -766,7 +672,6 @@ for i in range(0,N_l):
 
 
 
-
 dl_deg = lat[0,1] - lat[0,0]
 db_deb = long[0,0] - long[1,0]
 dOmega = dl_deg * db_deb * (np.pi/180.)**2
@@ -774,7 +679,6 @@ dOmega = dl_deg * db_deb * (np.pi/180.)**2
 P_sum = P_sum * dOmega
 P_int_sum = P_int_sum * dOmega
 P_ext_sum = P_ext_sum * dOmega
-P_enc = P_enc * dOmega
 
 
 print( "SN type: %s; SN distrubtion: %s" % (SN_type,SN_dist))
@@ -821,20 +725,14 @@ DataFile.write("max probability density:  %.2e deg^-2\n" % P_max_deg2)
 #print ("estimated P_tot = ",P_tot)
 
 f_int = P_int_sum/P_sum
-f_ext = P_ext_sum/P_sum
-f_enc = P_enc/P_sum
+f_ext = P_ext_sum/P_sum 
 print ("interior probability:  P_int = %.4f, f_int = %.4f" % (P_int_sum,f_int))
 print ("exterior probability:  P_ext = %.4f, f_ext = %.4f" % (P_ext_sum,f_ext))
-print ("proability inside dP_dOmega = %.2e contour:  f_enc = %.4f" % (dPdO_lim,f_enc))
 print ("total probability:  P_tot = %.4f" % (P_sum))
-
-print ("%i of %i obscured sightlines" % (N_obscure,N_l*N_b))
 
 DataFile.write("interior probabilty:  P_int = %.4f, f_int = %.4f\n" % (P_int_sum,f_int))
 DataFile.write("exterior probabilty:  P_ext = %.4f, f_ext = %.4f\n" % (P_ext_sum,f_ext))
 DataFile.write("total probabilty:  P_tot = %.4f\n" % (P_sum))
-
-DataFile.write("%i of %i obscured sightlines\n" % (N_obscure,N_l*N_b))
 
 
 t1 = time.time()
@@ -845,21 +743,15 @@ print ("time to calculate:  %.2f sec" % (t1-t0))
 
 fig = plt.figure(figsize=(15.,8))
 
-#plt.title("Sky Map: Type Ia Supernova Probability",weight='bold',fontsize=20)
 if (PlotType == PlotType_CC26Al):
-    plt.title(r"%s Supernovae in the %s Band:  ${}^{\mathbf{26}}{\mathbf{Al}}$ Model" % (SN_label, band), weight='bold',fontsize=20)
+    plt.title(r"%s Supernova Probability Density: ${}^{\mathbf{26}}{\mathbf{Al}}$ Model" % (SN_label),weight='bold',fontsize=20)
 else:
-    plt.title("%s Supernovae in the %s Band" % (SN_label, band),weight='bold',fontsize=20)
-
-plt.text(170.,13.,r"$%s_{\rm max} > %.1f$" % (band,m_lim), color='white', fontsize=20)
-
-plt.text(170.,10.,r"$M_{%s} = %.1f$" % (band,M_SN), color='white', fontsize=20)
-
+    plt.title("%s Supernova Probability Density" % (SN_label),weight='bold',fontsize=20)
 
 ScaleType = 2 # [P/P_max]
 ScaleType = 3 # [P/P_max] Aitoff
-ScaleType = 1 # log
-ScaleType = 0 # linear
+ScaleType = 0 # [sr^-1] linear
+ScaleType = 1 # [sr^-1] log
 
 
 if (ScaleType != 3):
@@ -871,8 +763,8 @@ if (ScaleType != 3):
 #cs = ax1.contourf(long,lat,dP_dOmega/P_max,levs, cmap=plt.cm.jet)
 #cs = ax1.contourf(long,lat,dP_dOmega,levs, cmap=plt.cm.jet, locator=ticker.LogLocator())
 
-Punits = "deg2"
 
+Punits = "deg2"
 
 
 if (ScaleType == 0):
@@ -881,31 +773,35 @@ if (ScaleType == 0):
     ############################################################
     if (Punits == "sr"):
         levs =  P_max * np.linspace(0.00, 1.00, 301)
-        #cs = ax1.contourf(long,lat,dP_dOmega, levs, cmap=plt.cm.jet)
-        cs = ax1.contourf(long,lat,dP_dOmega, levs, cmap=plt.cm.plasma)
+        #cs = ax1.contourf(long,lat,dP_dOmega, levs, cmap=plt.cm.nipy_spectral)
+        #cs = ax1.contourf(long,lat,dP_dOmega, levs, cmap=plt.cm.PuRd)
+        cs = ax1.contourf(long,lat,dP_dOmega, levs, cmap=plt.cm.jet)
+        #cs = ax1.contourf(long,lat,dP_dOmega, levs, cmap=plt.cm.jet, \
+            #                  vmin=0.00, vmax=50.0)
+        #plt.clim(0.,2.)
         ScaleLabel = r'Probability $dP/d\Omega \ [\rm sr^{-1}]$'
         scale_flabel = "sr"
     elif (Punits == "deg2"):
-        levs =  (np.pi/180.)**2 * P_max * np.linspace(0.00, 1.00, 301)
-        #cs = ax1.contourf(long, lat, (np.pi/180.)**2 * dP_dOmega, levs, cmap=plt.cm.jet)
-        cs = ax1.contourf(long, lat, (np.pi/180.)**2 * dP_dOmega, levs, cmap=plt.cm.plasma)
+        levs =  P_max * np.linspace(0.00, 1.00, 301) * (np.pi/180.)**2
+        cs = ax1.contourf(long, lat, dP_dOmega*(np.pi/180.)**2, levs, cmap=plt.cm.jet)
         ScaleLabel = r'Probability $dP/d\Omega \ [\rm deg^{-2}]$'
         scale_flabel = "deg2"
 elif (ScaleType == 1):
     ############################################################
-    ## log scale
+    ## log scale, units [sr^-2]
     ############################################################
-    P_max_0_sr = 2.507e1
     if (Punits == "sr"):
-        ##### units sr^-1
-        levs = P_max_0_sr * np.logspace(-5.2, 0.0, 301)
+        levs = P_max*np.logspace(-5.2, 0., 301)
         cs = ax1.contourf(long,lat,dP_dOmega,levs, cmap=plt.cm.jet, norm=LogNorm(), extend='both')
         ScaleLabel = r'Probability $dP/d\Omega \ [\rm sr^{-1}]$'
-        scale_label = "sr"
+        scale_flabel = "sr"
     elif (Punits == "deg2"):
-        ##### units deg^-2
-        levs = (np.pi/180.)**2 * P_max_0_sr * np.logspace(-5.2, 0.0, 301)
-        cs = ax1.contourf(long,lat,(np.pi/180.)**2*dP_dOmega,levs, cmap=plt.cm.jet, norm=LogNorm(), extend='both')
+    ############################################################
+    ## log scale, units [deg^-2]
+    ############################################################
+        levs = (np.pi/180.)**2 * P_max*np.logspace(-4., 0., 301)
+        #cs = ax1.contourf(long,lat,(np.pi/180.)**2*dP_dOmega,levs, cmap=plt.cm.jet, norm=LogNorm())
+        cs = ax1.contourf(long,lat,(np.pi/180.)**2*dP_dOmega,levs, cmap=plt.cm.seismic, norm=LogNorm())
         ScaleLabel = r'Probability $dP/d\Omega \ [\rm deg^{-2}]$'
         scale_flabel = "deg2"
 elif (ScaleType == 2):    
@@ -954,9 +850,9 @@ if (SN_type=="Ia"):
     plt.annotate('SN1604 (Kepler)',(4.5, 6.8), xytext=(0.0,6.4), color = 'w',zorder=10, fontsize=15)
     plt.annotate('SN1572 (Tycho)', (120.1, 1.4), xytext=(116.,1.0), color = 'w',zorder=10, fontsize=15)
 elif (SN_type=="CC"):
-    plt.scatter([-175.4, 130.7], [-5.8, +3.1], facecolors='w', marker=(5,1), zorder=10, s=200, edgecolors='y')
-    plt.annotate('SN1054 (Crab)', (-175.4, -5.8), xytext=(-110,-6.2), color='w',zorder=10, fontsize=15)
-    plt.annotate('SN1181',(130.7,3.1), xytext=(125,2.8), color='w', zorder=10, fontsize=15)
+    plt.scatter([-175.4, 130.7], [-5.8, +3.1], facecolors='blue', marker=(5,1), zorder=10, s=200, edgecolors='y')
+    plt.annotate('SN1054 (Crab)', (-175.4, -5.8), xytext=(-110,-6.2), color='k',zorder=10, fontsize=15)
+    plt.annotate('SN1181',(130.7,3.1), xytext=(125,2.8), color='k', zorder=10, fontsize=15)
     maybe_CC_color = 'azure'
     maybe_CC_color = 'lightskyblue'
     maybe_CC_color = 'deepskyblue'
@@ -966,22 +862,7 @@ elif (SN_type=="CC"):
     plt.annotate('Cas A', (125.,-4.), xytext=(125.,-4.), color=maybe_CC_color, zorder=10, fontsize=15)
 
     
-add_Contours = True
 
-if (add_Contours):
-    P_CC_vis_68 = 0.17
-    P_CC_vis_95 = 0.0143
-    P_Ia_vis_68 = 0.13
-    P_Ia_vis_95 =0.0070
-    if (PlotType == PlotType_CC):
-        levs_CC = ([P_CC_vis_95, P_CC_vis_68, 100.])
-        plt.contour(long,lat,dP_dOmega, levels=levs_CC, colors=['gray', 'black', 'white'], linestyles=['dashed','solid'])
-    elif (PlotType == PlotType_Ia):
-        levs_Ia = ([P_Ia_vis_95, P_Ia_vis_68, 100.])
-        plt.contour(long,lat,dP_dOmega, levels=levs_Ia, colors=['gray', 'black', 'white'], linestyles=['dashed','solid'])
-    elif (PlotType == PlotType_CC26Al):
-        levs_CC26Al = ([dPdO_26Al_95, dPdO_26Al_68, 100.])
-        plt.contour(long,lat,dP_dOmega, levels=levs_CC26Al, colors=['gray', 'black','white'], linestyles=['dashed','solid'])        
 
 
 draw_LSST = True
@@ -1058,7 +939,7 @@ if (PlotCelEq):
 if (ScaleType == 1):
     formatter = LogFormatter(10, labelOnlyBase=False)
     #cbar = fig.colorbar(cs, pad=0.01, ticks=[1.e-5, 1.e-4, 1.e-3, 1.e-2], format=formatter)
-    cbar = fig.colorbar(cs, pad=0.01, ticks=[1.E-7, 1.E-6, 1.e-5, 1.e-4, 1.e-3])
+    cbar = fig.colorbar(cs, pad=0.01, ticks=[1.e-7,1.e-6,1.e-5,1.e-4,1.e-3,1.e-2,1.e-1,1.,10.,100.])
     cbar.ax.tick_params(labelsize=16)
     #cbar = fig.colorbar(cs, pad=0.01)
     cbar.set_label(ScaleLabel, fontsize = 20, weight = 'bold')
@@ -1078,16 +959,14 @@ plt.tick_params(axis='both', which='major', labelsize=20)
 
 
 
-basename = "SNVisProb_"
-appmagname = "%s%.1f" % (band,m_lim)
-absmagname = "M%.1f" % (M_SN)
+basename = "SNProb_"
 zsunlabel = "zsun%.0f" % (z_sun*1.e3)
 thindisklabel = "Rthin%.1f_hthin%.0f" % (R_thin,h_thin*1.e3)
 thickdisklabel = "Rthick%.1f_hthick%.0f" % (R_thick,h_thick*1.e3)
 reslabel = "res%ix%i" % (N_l,N_b)
-figbasename = basename + SN_type + "_" + SN_dist + "_" + appmagname + "_" + absmagname + "_" + zsunlabel + "_" + thindisklabel + "_" + thickdisklabel + "_" + reslabel + "_" + scale_flabel
+figbasename = basename + SN_type + "_" + SN_dist + "_" + zsunlabel + "_" + thindisklabel + "_" + thickdisklabel + "_" + reslabel + "_" + scale_flabel
 
-if zoom:
+if ZoomLong:
     plotname = figbasename + "_zoom"
 else:
     plotname = figbasename 
@@ -1097,8 +976,8 @@ else:
 figname_png = figbasename+".png"
 fig.savefig(figname_png)
 print ("plot written to: %s" % figname_png)
-#fig.savefig(figbasename+".eps")
-#fig.savefig(figbasename+".pdf")
+fig.savefig(figbasename+".eps")
+fig.savefig(figbasename+".pdf")
 
 t2 = time.time()
 
@@ -1119,6 +998,7 @@ if (PrintPoints):
 
 DataFile.close()
 DataFile_points.close()
+
 
 
 def LongDis():
@@ -1172,9 +1052,6 @@ def LatDis():
     return    
 
 LatDis()
-
-
-
 
 def LatitudeDist():
 
